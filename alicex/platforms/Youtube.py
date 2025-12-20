@@ -1,6 +1,7 @@
 import asyncio
 import os
 import re
+import json
 from typing import Union
 import random
 import yt_dlp
@@ -9,32 +10,12 @@ from pyrogram.types import Message
 from youtubesearchpython.__future__ import VideosSearch
 
 from alicex.utils.database import is_on_off
-from alicex.utils.formatters import time_to_seconds
-
-async def shell_cmd(cmd):
-    proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    out, errorz = await proc.communicate()
-    if errorz:
-        if "unavailable videos are hidden" in (errorz.decode("utf-8")).lower():
-            return out.decode("utf-8")
-        else:
-            return errorz.decode("utf-8")
-    return out.decode("utf-8")
+# FIX: Added seconds_to_min here
+from alicex.utils.formatters import time_to_seconds, seconds_to_min
 
 # --- CONFIGURATION START ---
 cookies_dir = "cookies/"
-# Load all cookie files once into memory to avoid OS calls on every request
-all_files = os.listdir(cookies_dir)
-txt_files = [os.path.join(cookies_dir, file) for file in all_files if file.endswith(".txt")]
 
-if not txt_files:
-    raise FileNotFoundError("No .txt cookie files found in cookies/ directory!")
-
-# List of User-Agents to rotate (Protection Layer 1)
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
@@ -45,6 +26,19 @@ USER_AGENTS = [
 ]
 # --- CONFIGURATION END ---
 
+async def shell_cmd(cmd):
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    out, errorz = await proc.communicate()
+    if out:
+        return out.decode("utf-8")
+    if errorz:
+        return errorz.decode("utf-8")
+    return out.decode("utf-8")
+
 class YouTubeAPI:
     def __init__(self):
         self.base = "https://www.youtube.com/watch?v="
@@ -54,15 +48,18 @@ class YouTubeAPI:
         self.reg = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
     def _get_random_cookie(self):
-        """Selects a random cookie file from the loaded list."""
+        if not os.path.exists(cookies_dir):
+            os.makedirs(cookies_dir)
+        all_files = os.listdir(cookies_dir)
+        txt_files = [os.path.join(cookies_dir, file) for file in all_files if file.endswith(".txt")]
+        if not txt_files:
+            return None 
         return random.choice(txt_files)
 
     def _get_random_agent(self):
-        """Selects a random User-Agent."""
         return random.choice(USER_AGENTS)
 
     async def _safe_sleep(self):
-        """Adds a small random delay to prevent rate-limiting (Protection Layer 2)."""
         await asyncio.sleep(random.uniform(0.5, 2.0))
 
     async def exists(self, link: str, videoid: Union[bool, str] = None):
@@ -98,58 +95,128 @@ class YouTubeAPI:
         return text[offset : offset + length]
 
     async def details(self, link: str, videoid: Union[bool, str] = None):
-        await self._safe_sleep() # Protection delay
         if videoid:
             link = self.base + link
         if "&" in link:
             link = link.split("&")[0]
-        results = VideosSearch(link, limit=1)
-        for result in (await results.next())["result"]:
-            title = result["title"]
-            duration_min = result["duration"]
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-            vidid = result["id"]
-            if str(duration_min) == "None":
-                duration_sec = 0
-            else:
-                duration_sec = int(time_to_seconds(duration_min))
-        return title, duration_min, duration_sec, thumbnail, vidid
+        return await self.track(link)
+
+    async def track(self, link: str, videoid: Union[bool, str] = None):
+        if videoid:
+            link = self.base + link
+        if "&" in link:
+            link = link.split("&")[0]
+
+        current_cookie = self._get_random_cookie()
+        current_agent = self._get_random_agent()
+        
+        if not re.search(self.regex, link):
+            cmd_link = f"ytsearch1:{link}"
+        else:
+            cmd_link = link
+
+        cmd_args = [
+            "yt-dlp",
+            "--dump-json",
+            "--user-agent", current_agent,
+            "--geo-bypass",
+            "--no-check-certificate",
+            "--quiet",
+            "--no-playlist",
+            cmd_link,
+        ]
+
+        if current_cookie:
+            cmd_args.insert(1, "--cookies")
+            cmd_args.insert(2, current_cookie)
+
+        proc = await asyncio.create_subprocess_exec(
+            *cmd_args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+        
+        if stdout:
+            info = json.loads(stdout.decode())
+            if isinstance(info, list): 
+                info = info[0] if info else {}
+            
+            title = info.get("title", "Unknown Title")
+            duration_sec = info.get("duration", 0)
+            duration_min = seconds_to_min(duration_sec)
+            vidid = info.get("id")
+            yturl = f"https://www.youtube.com/watch?v={vidid}"
+            thumbnail = info.get("thumbnail", "https://telegra.ph/file/1e3b6d034293f7739943f.jpg")
+            
+            track_details = {
+                "title": title,
+                "link": yturl,
+                "vidid": vidid,
+                "duration_min": duration_min,
+                "thumb": thumbnail,
+            }
+            return track_details, vidid
+        else:
+            raise Exception(f"yt-dlp failed: {stderr.decode()}")
+
+    async def slider(self, link: str, query_type: int, videoid: Union[bool, str] = None):
+        if videoid:
+            link = self.base + link
+        if "&" in link:
+            link = link.split("&")[0]
+
+        current_cookie = self._get_random_cookie()
+        current_agent = self._get_random_agent()
+        
+        cmd_args = [
+            "yt-dlp",
+            "--dump-json",
+            "--user-agent", current_agent,
+            "--flat-playlist",
+            f"ytsearch10:{link}",
+        ]
+
+        if current_cookie:
+            cmd_args.insert(1, "--cookies")
+            cmd_args.insert(2, current_cookie)
+
+        proc = await asyncio.create_subprocess_exec(
+            *cmd_args,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate()
+        
+        if stdout:
+            results = [json.loads(line) for line in stdout.decode().splitlines() if line]
+            if not results or query_type >= len(results):
+                raise Exception("No results found")
+
+            result = results[query_type]
+            title = result.get("title")
+            duration_sec = result.get("duration", 0)
+            duration_min = seconds_to_min(duration_sec)
+            vidid = result.get("id")
+            thumbnail = f"https://i.ytimg.com/vi/{vidid}/hqdefault.jpg"
+            
+            return title, duration_min, thumbnail, vidid
+        else:
+             raise Exception(f"yt-dlp slider failed: {stderr.decode()}")
 
     async def title(self, link: str, videoid: Union[bool, str] = None):
-        await self._safe_sleep()
-        if videoid:
-            link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
-        results = VideosSearch(link, limit=1)
-        for result in (await results.next())["result"]:
-            title = result["title"]
-        return title
+        details, _ = await self.track(link, videoid)
+        return details["title"]
 
     async def duration(self, link: str, videoid: Union[bool, str] = None):
-        await self._safe_sleep()
-        if videoid:
-            link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
-        results = VideosSearch(link, limit=1)
-        for result in (await results.next())["result"]:
-            duration = result["duration"]
-        return duration
+        details, _ = await self.track(link, videoid)
+        return details["duration_min"]
 
     async def thumbnail(self, link: str, videoid: Union[bool, str] = None):
-        await self._safe_sleep()
-        if videoid:
-            link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
-        results = VideosSearch(link, limit=1)
-        for result in (await results.next())["result"]:
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-        return thumbnail
+        details, _ = await self.track(link, videoid)
+        return details["thumb"]
 
     async def video(self, link: str, videoid: Union[bool, str] = None):
-        # Rotation logic
         current_cookie = self._get_random_cookie()
         current_agent = self._get_random_agent()
         
@@ -158,14 +225,20 @@ class YouTubeAPI:
         if "&" in link:
             link = link.split("&")[0]
             
-        proc = await asyncio.create_subprocess_exec(
+        cmd_args = [
             "yt-dlp",
-            "--cookies", current_cookie,
             "--user-agent", current_agent,
             "-g",
-            "-f",
-            "best[height<=?720][width<=?1280]",
+            "-f", "best[height<=?720][width<=?1280]",
             f"{link}",
+        ]
+        
+        if current_cookie:
+            cmd_args.insert(1, "--cookies")
+            cmd_args.insert(2, current_cookie)
+
+        proc = await asyncio.create_subprocess_exec(
+            *cmd_args,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -176,7 +249,6 @@ class YouTubeAPI:
             return 0, stderr.decode()
 
     async def playlist(self, link, limit, user_id, videoid: Union[bool, str] = None):
-        # Rotation logic
         current_cookie = self._get_random_cookie()
         current_agent = self._get_random_agent()
 
@@ -184,9 +256,11 @@ class YouTubeAPI:
             link = self.listbase + link
         if "&" in link:
             link = link.split("&")[0]
-            
+        
+        cookie_cmd = f"--cookies {current_cookie}" if current_cookie else ""
+        
         playlist = await shell_cmd(
-            f"yt-dlp --cookies {current_cookie} --user-agent \"{current_agent}\" -i --get-id --flat-playlist --playlist-end {limit} --skip-download {link}"
+            f"yt-dlp {cookie_cmd} --user-agent \"{current_agent}\" -i --get-id --flat-playlist --playlist-end {limit} --skip-download {link}"
         )
         try:
             result = playlist.split("\n")
@@ -197,30 +271,7 @@ class YouTubeAPI:
             result = []
         return result
 
-    async def track(self, link: str, videoid: Union[bool, str] = None):
-        await self._safe_sleep()
-        if videoid:
-            link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
-        results = VideosSearch(link, limit=1)
-        for result in (await results.next())["result"]:
-            title = result["title"]
-            duration_min = result["duration"]
-            vidid = result["id"]
-            yturl = result["link"]
-            thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-        track_details = {
-            "title": title,
-            "link": yturl,
-            "vidid": vidid,
-            "duration_min": duration_min,
-            "thumb": thumbnail,
-        }
-        return track_details, vidid
-
     async def formats(self, link: str, videoid: Union[bool, str] = None):
-        # Rotation logic
         current_cookie = self._get_random_cookie()
         current_agent = self._get_random_agent()
 
@@ -231,9 +282,10 @@ class YouTubeAPI:
             
         ytdl_opts = {
             "quiet": True, 
-            "cookiefile": current_cookie, 
             "user_agent": current_agent
         }
+        if current_cookie:
+            ytdl_opts["cookiefile"] = current_cookie
         
         ydl = yt_dlp.YoutubeDL(ytdl_opts)
         with ydl:
@@ -265,25 +317,6 @@ class YouTubeAPI:
                     )
         return formats_available, link
 
-    async def slider(
-        self,
-        link: str,
-        query_type: int,
-        videoid: Union[bool, str] = None,
-    ):
-        await self._safe_sleep()
-        if videoid:
-            link = self.base + link
-        if "&" in link:
-            link = link.split("&")[0]
-        a = VideosSearch(link, limit=10)
-        result = (await a.next()).get("result")
-        title = result[query_type]["title"]
-        duration_min = result[query_type]["duration"]
-        vidid = result[query_type]["id"]
-        thumbnail = result[query_type]["thumbnails"][0]["url"].split("?")[0]
-        return title, duration_min, thumbnail, vidid
-
     async def download(
         self,
         link: str,
@@ -296,7 +329,6 @@ class YouTubeAPI:
         title: Union[bool, str] = None,
     ) -> str:
         
-        # Select cookie and agent ONCE for this specific download attempt
         current_cookie = self._get_random_cookie()
         current_agent = self._get_random_agent()
         
@@ -312,10 +344,12 @@ class YouTubeAPI:
                 "nocheckcertificate": True,
                 "quiet": True,
                 "no_warnings": True,
-                "cookiefile": current_cookie, # Rotated cookie
-                "user_agent": current_agent,  # Rotated User-Agent
-                "sleep_interval": 2,          # Sleep between requests (Protection)
+                "user_agent": current_agent,
+                "sleep_interval": 2,
             }
+            if current_cookie:
+                ydl_optssx["cookiefile"] = current_cookie
+
             x = yt_dlp.YoutubeDL(ydl_optssx)
             info = x.extract_info(link, False)
             xyz = os.path.join("downloads", f"{info['id']}.{info['ext']}")
@@ -332,10 +366,12 @@ class YouTubeAPI:
                 "nocheckcertificate": True,
                 "quiet": True,
                 "no_warnings": True,
-                "cookiefile": current_cookie,
                 "user_agent": current_agent,
                 "sleep_interval": 2,
             }
+            if current_cookie:
+                ydl_optssx["cookiefile"] = current_cookie
+
             x = yt_dlp.YoutubeDL(ydl_optssx)
             info = x.extract_info(link, False)
             xyz = os.path.join("downloads", f"{info['id']}.{info['ext']}")
@@ -356,10 +392,12 @@ class YouTubeAPI:
                 "no_warnings": True,
                 "prefer_ffmpeg": True,
                 "merge_output_format": "mp4",
-                "cookiefile": current_cookie,
                 "user_agent": current_agent,
                 "sleep_interval": 2,
             }
+            if current_cookie:
+                ydl_optssx["cookiefile"] = current_cookie
+
             x = yt_dlp.YoutubeDL(ydl_optssx)
             x.download([link])
 
@@ -380,10 +418,12 @@ class YouTubeAPI:
                         "preferredquality": "192",
                     }
                 ],
-                "cookiefile": current_cookie,
                 "user_agent": current_agent,
                 "sleep_interval": 2,
             }
+            if current_cookie:
+                ydl_optssx["cookiefile"] = current_cookie
+
             x = yt_dlp.YoutubeDL(ydl_optssx)
             x.download([link])
 
@@ -400,15 +440,19 @@ class YouTubeAPI:
                 direct = True
                 downloaded_file = await loop.run_in_executor(None, video_dl)
             else:
-                # Update subprocess call for direct video pipe
-                proc = await asyncio.create_subprocess_exec(
+                cmd_args = [
                     "yt-dlp",
-                    "--cookies", current_cookie,
                     "--user-agent", current_agent,
                     "-g",
-                    "-f",
-                    "best[height<=?720][width<=?1280]",
+                    "-f", "best[height<=?720][width<=?1280]",
                     f"{link}",
+                ]
+                if current_cookie:
+                    cmd_args.insert(1, "--cookies")
+                    cmd_args.insert(2, current_cookie)
+
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd_args,
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
                 )
