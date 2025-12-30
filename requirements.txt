@@ -7,7 +7,7 @@ ffmpeg-python
 gitpython
 hachoir
 heroku3
-motor==2.3.0
+motor>=3.3.2
 numpy
 opencv-python
 pillow==9.5.0
@@ -26,7 +26,7 @@ uvloop
 yt-dlp
 youtube-search
 youtube-search-python
-pymongo==3.12.0
+pymongo>=4.6.0
 nano
 flask
 gunicorn
