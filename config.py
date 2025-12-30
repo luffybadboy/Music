@@ -51,7 +51,7 @@ TG_AUDIO_FILESIZE_LIMIT = int(getenv("TG_AUDIO_FILESIZE_LIMIT", 104857600))
 TG_VIDEO_FILESIZE_LIMIT = int(getenv("TG_VIDEO_FILESIZE_LIMIT", 2145386496))
 
 # ────────────────────── PYROGRAM SESSIONS ─────────────────
-STRING1 = "STRING_SESSION"
+STRING1 = "AQH-pWEAdpaX9RNqogQdjH2lHvYJ3nk4bldabDXDs4CAb7CxZ0apKRRykSeqtdJ_BEQN9rE7sBRddyJ07FUJGi2xqRIp6pU2UHAwa7gkRW1674Gd-emSNECHyPcWVyzgzvvJm1t3nJ_OEJIZf4q3C_0daxYZypOO7ZROhZn48FSnfkT0BOHDxHcVxYObjk8nRj8q2qsu3dF2Uw_59iQsSu4OCg1cRlVQSiUeCs6U1HW1MPEATUK3casd9_YNDRYM0049etmT6i0VHkQgKD47BIj2fbhMCDscuke70ix3Bj1W_GkJXCU55WgHJGrjbRBdl45LXxw-iPqUEczpOALZD8WqTjby6gAAAAH9Kh65AA"
 STRING2 = None
 STRING3 = None
 STRING4 = None
@@ -66,7 +66,7 @@ autoclean = []
 confirmer = {}
 
 # ────────────────────── IMAGES ────────────────────────────
-START_IMG_URL = "https://i.ibb.co/h1cjL7jw/x.jpg"
+START_IMG_URL = "https://i.ibb.co/m50CQT28/x.jpg"
 PING_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
 PLAYLIST_IMG_URL = "https://graph.org/file/763a841a2ad5cbb1e2fc5.jpg"
 STATS_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
@@ -99,3 +99,4 @@ if SUPPORT_GROUP:
         raise SystemExit(
             "[ERROR] - SUPPORT_GROUP must start with https://"
 )
+
