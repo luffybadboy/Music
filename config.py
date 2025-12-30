@@ -7,26 +7,26 @@ from pyrogram import filters
 load_dotenv()
 
 # Get this value from my.telegram.org/apps
-API_ID = API_ID
-API_HASH = "API_HASH"
+API_ID = 22175614
+API_HASH = "5dab14fb645d7c6b5f8d094581192e04"
 
 # Get your token from @BotFather on Telegram.
-BOT_TOKEN = "BOT_TOKEN"
+BOT_TOKEN = "8121823141:AAE7nHSJuxNMySY3SmtpJ5hFrO_X4RpbPpo"
 
 # Get your mongo url from cloud.mongodb.com
-MONGO_DB_URI = "MONGO_DB_URI"
+MONGO_DB_URI = "mongodb+srv://121manokaran:RrQU9aVnFnEwonSX@cluster0.uxizm.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 60))
 
 # Chat id of a group for logging bot's activities
-LOG_GROUP_ID = LOG_GROUP_ID
+LOG_GROUP_ID = -1001654008278
 
 # Get this value from @ultron2_robot on Telegram by /id
-OWNER_ID = OWNER_ID
+OWNER_ID = 1491400016
 
 ## Fill these variables if you're deploying on heroku.
 # Your heroku app name
-HEROKU_APP_NAME = getenv("HEROKU_APP_NAME")
+HEROKU_APP_NAME = getenv("LunaMusicXbot")
 # Get it from http://dashboard.heroku.com/account
 HEROKU_API_KEY = getenv("HEROKU_API_KEY")
 
@@ -39,8 +39,8 @@ GIT_TOKEN = getenv(
     "GIT_TOKEN", None
 )  # Fill this variable if your upstream repository is private
 
-SUPPORT_CHANNEL = "https://t.me/thanos_pro"
-SUPPORT_GROUP = "https://t.me/thanosprosss"
+SUPPORT_CHANNEL = "https://t.me/MUBIBOTz"
+SUPPORT_GROUP = "https://t.me/Mobarak46"
 
 # Set this to True if you want the assistant to automatically leave chats after an interval
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
@@ -77,7 +77,7 @@ autoclean = []
 confirmer = {}
 
 
-START_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
+START_IMG_URL = "https://i.ibb.co/h1cjL7jw/x.jpg"
 
 PING_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
 
@@ -112,3 +112,4 @@ if SUPPORT_GROUP:
         raise SystemExit(
             "[ERROR] - Your SUPPORT_GROUP url is wrong. Please ensure that it starts with https://"
         )
+
