@@ -1,7 +1,7 @@
 <h1 align="center">🎵 Alice Music Bot 🎵</h1>
 
 <p align="center">
-  <img src="https://graph.org/file/f586172fe40a0b5d0b0df.jpg" alt="Alice Music Logo" width="600" height="350">
+  <img src="https://i.ibb.co/h1cjL7jw/x.jpg" alt="Alice Music Logo" width="600" height="350">
 </p>
 
 <p align="center">
