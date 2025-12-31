@@ -21,7 +21,7 @@ MONGO_DB_URI = "mongodb+srv://121manokaran:RrQU9aVnFnEwonSX@cluster0.uxizm.mongo
 # ────────────────────── BASIC SETTINGS ────────────────────
 DURATION_LIMIT_MIN = int(getenv("DURATION_LIMIT", 60))
 
-LOG_GROUP_ID = 1003613033599
+LOG_GROUP_ID = -1002345727987
 OWNER_ID = 1491400016
 
 # ────────────────────── HEROKU (DISABLED) ─────────────────
@@ -99,6 +99,7 @@ if SUPPORT_GROUP:
         raise SystemExit(
             "[ERROR] - SUPPORT_GROUP must start with https://"
 )
+
 
 
 
