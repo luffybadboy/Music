@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import aiofiles
+import traceback
 import aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from youtubesearchpython.__future__ import VideosSearch
@@ -248,3 +249,4 @@ async def gen_thumb(videoid: str):
         logging.error(f"Error generating thumbnail for video {videoid}: {e}")
         traceback.print_exc()
         return None
+
