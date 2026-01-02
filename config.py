@@ -67,17 +67,17 @@ confirmer = {}
 
 # ────────────────────── IMAGES ────────────────────────────
 START_IMG_URL = "https://i.ibb.co/m50CQT28/x.jpg"
-PING_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
-PLAYLIST_IMG_URL = "https://graph.org/file/763a841a2ad5cbb1e2fc5.jpg"
-STATS_IMG_URL = "https://graph.org/file/f586172fe40a0b5d0b0df.jpg"
-TELEGRAM_AUDIO_URL = "https://graph.org//file/2f7debf856695e0ef0607.png"
-TELEGRAM_VIDEO_URL = "https://graph.org//file/2f7debf856695e0ef0607.png"
-STREAM_IMG_URL = "https://te.legra.ph/file/bd995b032b6bd263e2cc9.jpg"
-SOUNCLOUD_IMG_URL = "https://te.legra.ph/file/bb0ff85f2dd44070ea519.jpg"
-YOUTUBE_IMG_URL = "https://graph.org//file/2f7debf856695e0ef0607.png"
-SPOTIFY_ARTIST_IMG_URL = "https://te.legra.ph/file/37d163a2f75e0d3b403d6.jpg"
-SPOTIFY_ALBUM_IMG_URL = "https://te.legra.ph/file/b35fd1dfca73b950b1b05.jpg"
-SPOTIFY_PLAYLIST_IMG_URL = "https://te.legra.ph/file/95b3ca7993bbfaf993dcb.jpg"
+PING_IMG_URL = "https://i.ibb.co/JRCyfFdp/x.jpg"
+PLAYLIST_IMG_URL = "https://i.ibb.co/dwBc7BXd/x.jpg"
+STATS_IMG_URL = "https://i.ibb.co/sdbRcvLZ/x.jpg"
+TELEGRAM_AUDIO_URL = "https://i.ibb.co/rGSkBj1T/x.jpg"
+TELEGRAM_VIDEO_URL = "https://i.ibb.co/rGSkBj1T/x.jpg"
+STREAM_IMG_URL = "https://i.ibb.co/7dD4Nsbw/x.jpg"
+SOUNCLOUD_IMG_URL = "https://i.ibb.co/7dD4Nsbw/x.jpg"
+YOUTUBE_IMG_URL = "https://i.ibb.co/SXs84HRf/x.jpg"
+SPOTIFY_ARTIST_IMG_URL = "https://i.ibb.co/SXs84HRf/x.jpg"
+SPOTIFY_ALBUM_IMG_URL = "https://i.ibb.co/SXs84HRf/x.jpg"
+SPOTIFY_PLAYLIST_IMG_URL = "https://i.ibb.co/SXs84HRf/x.jpg"
 
 # ────────────────────── FUNCTIONS ─────────────────────────
 def time_to_seconds(time):
@@ -99,6 +99,7 @@ if SUPPORT_GROUP:
         raise SystemExit(
             "[ERROR] - SUPPORT_GROUP must start with https://"
 )
+
 
 
 
